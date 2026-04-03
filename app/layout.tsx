@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Finanzas',
   description: 'App de finanzas personales',
+  viewport: { width: 'device-width', initialScale: 1, viewportFit: 'cover' },
 }
 
 const NAV_ITEMS = [
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ))}
         </aside>
         {/* Main content */}
-        <main className="md:ml-56 pb-20 md:pb-0 min-h-screen">
+        <main className="md:ml-56 pb-24 md:pb-0 min-h-screen">
           {children}
         </main>
         <BottomNav />
