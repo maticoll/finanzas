@@ -35,8 +35,8 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
   const diff = inputValue ? parseFloat(inputValue) - item.expectedBalance : null
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-2xl w-full max-w-md p-6">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center p-4 pb-24 md:pb-4">
+      <div className="bg-gray-900 rounded-2xl w-full max-w-md p-6 overflow-y-auto max-h-[80vh]">
         <h2 className="text-lg font-bold mb-1">Reconciliación mensual</h2>
         <p className="text-gray-400 text-sm mb-4">{item.card.name}</p>
         <div className="bg-gray-800 rounded-xl p-4 mb-4">
@@ -59,7 +59,7 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
         <div className="flex gap-3">
           <button
             onClick={() => handleSave(item, 'confirmed')}
-            disabled={!inputValue || saving}
+            disabled={saving}
             className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl py-3 font-semibold"
           >
             ✅ Usar mi monto
