@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
 import TransactionForm from '@/components/TransactionForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NuevaTransaccionPage() {
   const [cards, categories] = await Promise.all([
     prisma.card.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } }),
