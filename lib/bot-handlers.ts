@@ -110,7 +110,12 @@ export async function handleMessage(update: any) {
     return
   }
 
-  const extracted = await extractTransaction(transcript)
+  const allCategories = await prisma.category.findMany({ where: { isActive: true } })
+  const categoryNames = {
+    gasto: allCategories.filter(c => c.type === 'gasto').map(c => c.name),
+    ingreso: allCategories.filter(c => c.type === 'ingreso').map(c => c.name),
+  }
+  const extracted = await extractTransaction(transcript, categoryNames)
 
   if (extracted.confidence === 'low') {
     await sendMessage(
