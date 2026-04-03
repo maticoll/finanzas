@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { handleMessage, handleCallbackQuery } from '@/lib/bot-handlers'
 import { NextResponse } from 'next/server'
 

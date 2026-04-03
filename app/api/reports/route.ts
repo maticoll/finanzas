@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getMonthlyReport, getLast6MonthsSummary } from '@/lib/reports'
 import { NextResponse } from 'next/server'
 
