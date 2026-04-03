@@ -19,6 +19,7 @@ export interface ExtractedTransaction {
   categoryHint: string
   cardHint: string
   description: string
+  date: string | null
   confidence: 'high' | 'low'
 }
 
@@ -41,9 +42,10 @@ export async function extractTransaction(text: string, categoryNames?: { gasto: 
           "categoryHint": string (nombre exacto de la categoría de la lista),
           "cardHint": string (nombre aproximado de la tarjeta o medio de pago, vacío si no se menciona),
           "description": string (descripción breve),
+          "date": string | null (fecha en formato ISO YYYY-MM-DD si se menciona, null si no),
           "confidence": "high" | "low"
         }
-        Si el monto no está claro, pon confidence: "low". Moneda por defecto: UYU.${catHint}`,
+        Si el monto no está claro, pon confidence: "low". Moneda por defecto: UYU. Año actual: ${new Date().getFullYear()}.${catHint}`,
       },
       { role: 'user', content: text },
     ],

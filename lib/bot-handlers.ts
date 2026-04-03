@@ -130,6 +130,7 @@ export async function handleMessage(update: any) {
   const montoStr = `$${extracted.amount.toLocaleString('es-UY')} ${extracted.currency}`
   const confirmKey = `${Date.now()}`
 
+  const txDate = extracted.date ? new Date(extracted.date) : new Date()
   const pendingData = {
     amount: extracted.amount,
     currency: extracted.currency,
@@ -137,7 +138,7 @@ export async function handleMessage(update: any) {
     categoryId: category?.id,
     cardId: card?.id,
     description: extracted.description,
-    date: new Date().toISOString(),
+    date: txDate.toISOString(),
     source: 'telegram',
   }
 
@@ -147,9 +148,10 @@ export async function handleMessage(update: any) {
   const cardStr = card ? card.name : '❓ tarjeta no detectada'
   const catStr = category ? `${category.emoji ?? ''} ${category.name}` : '❓ categoría no detectada'
   const typeStr = extracted.type === 'gasto' ? '📤 Gasto' : '📥 Ingreso'
+  const dateStr = txDate.toLocaleDateString('es-UY', { day: 'numeric', month: 'long', year: 'numeric' })
 
   await sendWithConfirmButtons(
-    `${typeStr}: *${montoStr}*\nCategoría: ${catStr}\nTarjeta: ${cardStr}\nDescripción: _${extracted.description}_\n\n¿Confirmo este registro?`,
+    `${typeStr}: *${montoStr}*\nFecha: ${dateStr}\nCategoría: ${catStr}\nTarjeta: ${cardStr}\nDescripción: _${extracted.description}_\n\n¿Confirmo este registro?`,
     confirmKey
   )
 }
