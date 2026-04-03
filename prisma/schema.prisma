@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Card {
+  id                  String    @id @default(cuid())
+  name                String
+  type                CardType
+  bank                String?
+  closingDay          Int?
+  dueDay              Int?
+  limitAmount         Float?
+  currency            String    @default("UYU")
+  isActive            Boolean   @default(true)
+  isOwner             Boolean   @default(true)
+  linkedPaymentCardId String?
+  linkedPaymentCard   Card?     @relation("LinkedCard", fields: [linkedPaymentCardId], references: [id])
+  linkedCards         Card[]    @relation("LinkedCard")
+  transactions        Transaction[]
+  monthlyBalances     MonthlyBalance[]
+  notificationLogs    NotificationLog[]
+  createdAt           DateTime  @default(now())
+}
+
+enum CardType {
+  credito
+  debito
+  efectivo
+}
+
+model Category {
+  id           String          @id @default(cuid())
+  name         String
+  type         TransactionType
+  emoji        String?
+  color        String?
+  isActive     Boolean         @default(true)
+  transactions Transaction[]
+  createdAt    DateTime        @default(now())
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  amount      Float
+  currency    String          @default("UYU")
+  type        TransactionType
+  categoryId  String
+  category    Category        @relation(fields: [categoryId], references: [id])
+  cardId      String
+  card        Card            @relation(fields: [cardId], references: [id])
+  description String?
+  source      Source          @default(manual)
+  date        DateTime
+  createdAt   DateTime        @default(now())
+}
+
+enum TransactionType {
+  gasto
+  ingreso
+}
+
+enum Source {
+  manual
+  telegram
+}
+
+model MonthlyBalance {
+  id              String                @id @default(cuid())
+  cardId          String
+  card            Card                  @relation(fields: [cardId], references: [id])
+  month           Int
+  year            Int
+  expectedBalance Float
+  openingBalance  Float
+  difference      Float
+  status          ReconciliationStatus
+  recordedAt      DateTime              @default(now())
+
+  @@unique([cardId, month, year])
+}
+
+enum ReconciliationStatus {
+  confirmed
+  cancelled
+}
+
+model NotificationLog {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  cardId    String?
+  card      Card?            @relation(fields: [cardId], references: [id])
+  message   String
+  sentAt    DateTime         @default(now())
+}
+
+enum NotificationType {
+  cierre
+  limite
+  reconciliacion
+}
