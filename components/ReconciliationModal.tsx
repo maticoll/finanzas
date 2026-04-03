@@ -19,7 +19,7 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
   if (items.length === 0) return null
 
   const item = items[index]
-  const inputValue = values[item.card.id] ?? (item.existing ? String(item.existing.openingBalance) : '')
+  const inputValue = values[item.card.id] ?? (item.existing ? String(item.existing.openingBalance) : String(item.expectedBalance))
   const diff = inputValue !== '' ? parseFloat(inputValue) - item.expectedBalance : null
 
   const goNext = () => {
@@ -68,7 +68,7 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
           value={inputValue}
           onChange={e => setValues(v => ({ ...v, [item.card.id]: e.target.value }))}
           className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="Ingresá el saldo real"
+          placeholder="0"
           autoFocus
         />
         {diff !== null && diff !== 0 && (
