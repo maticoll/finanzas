@@ -22,25 +22,27 @@ const NAV_ITEMS = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={`${inter.className} bg-gray-950 text-gray-100 min-h-screen`}>
-        {/* Sidebar desktop */}
-        <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-gray-900 border-r border-gray-800 flex-col p-4 gap-1">
-          <div className="text-xl font-bold text-indigo-400 mb-6 px-2">💰 Finanzas</div>
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </aside>
-        {/* Main content */}
-        <main className="md:ml-56 pb-24 md:pb-0 min-h-screen">
-          {children}
-        </main>
+      <body className={`${inter.className} bg-gray-950 text-gray-100 h-screen overflow-hidden flex flex-col`}>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar desktop */}
+          <aside className="hidden md:flex flex-col w-56 bg-gray-900 border-r border-gray-800 p-4 gap-1 flex-shrink-0">
+            <div className="text-xl font-bold text-indigo-400 mb-6 px-2">💰 Finanzas</div>
+            {NAV_ITEMS.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </aside>
+          {/* Main content scrolls here */}
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
         <BottomNav />
       </body>
     </html>

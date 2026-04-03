@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 export default function BottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-800 md:hidden" style={{ transform: 'translateZ(0)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav className="bg-gray-900 border-t border-gray-800 md:hidden flex-shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex justify-around items-center h-16">
         {NAV_ITEMS.map(item => (
           <Link
