@@ -10,7 +10,10 @@ export default async function DashboardPage() {
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0, 23, 59, 59)
 
-  const [cards, transactions, balances] = await Promise.all([
+  const prevMonth = month === 1 ? 12 : month - 1
+  const prevYear = month === 1 ? year - 1 : year
+
+  const [cards, transactions] = await Promise.all([
     prisma.card.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } }),
     prisma.transaction.findMany({
       where: { date: { gte: start, lte: end } },
@@ -18,9 +21,29 @@ export default async function DashboardPage() {
       orderBy: { date: 'desc' },
       take: 50,
     }),
-    fetch(`${process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000'}/api/balances?month=${month}&year=${year}`, { cache: 'no-store' })
-      .then(r => r.json()).catch(() => []),
   ])
+
+  // Calcular balances directamente con Prisma (sin fetch a sí mismo)
+  const debitCards = cards.filter(c => c.isOwner && c.type !== 'credito')
+  const balances = await Promise.all(
+    debitCards.map(async (card) => {
+      const existing = await prisma.monthlyBalance.findUnique({
+        where: { cardId_month_year: { cardId: card.id, month, year } },
+      })
+      const prevBalance = await prisma.monthlyBalance.findUnique({
+        where: { cardId_month_year: { cardId: card.id, month: prevMonth, year: prevYear } },
+      })
+      const agg = await prisma.transaction.groupBy({
+        by: ['type'],
+        where: { cardId: card.id, date: { gte: start, lte: end } },
+        _sum: { amount: true },
+      })
+      const monthExpensesCard = agg.find(a => a.type === 'gasto')?._sum.amount ?? 0
+      const monthIncomeCard = agg.find(a => a.type === 'ingreso')?._sum.amount ?? 0
+      const expectedBalance = (prevBalance?.openingBalance ?? 0) + monthIncomeCard - monthExpensesCard
+      return { card, existing, expectedBalance }
+    })
+  )
 
   const totalExpenses = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
   const totalIncome = transactions.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
