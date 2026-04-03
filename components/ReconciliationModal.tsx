@@ -29,6 +29,9 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
 
   const handleSave = async () => {
     if (!inputValue) return
+    const cleaned = inputValue.replace(/\./g, '').replace(',', '.')
+    const amount = parseFloat(cleaned)
+    if (isNaN(amount)) return
     setSaving(true)
     await fetch('/api/balances', {
       method: 'POST',
@@ -37,7 +40,7 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
         cardId: item.card.id,
         month,
         year,
-        openingBalance: parseFloat(inputValue),
+        openingBalance: amount,
         expectedBalance: item.expectedBalance,
         status: 'confirmed',
       }),
@@ -64,7 +67,8 @@ export default function ReconciliationModal({ items, month, year, onClose }: Pro
         </div>
         <label className="block text-sm text-gray-400 mb-1">¿Con cuánto arrancás este mes?</label>
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={inputValue}
           onChange={e => setValues(v => ({ ...v, [item.card.id]: e.target.value }))}
           className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white text-lg font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
