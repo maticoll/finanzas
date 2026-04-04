@@ -5,6 +5,7 @@ type Card = {
   id: string
   name: string
   type: string
+  currency: string
   bank?: string | null
   closingDay?: number | null
   limitAmount?: number | null
@@ -83,9 +84,9 @@ export default function CardCarousel({ cards, selectedCardId, onSelect, monthExp
               </button>
             </div>
             <div className="text-xl font-bold text-white">
-              {balanceVisible ? `$${balance.toLocaleString('es-UY')} UYU` : '••••••'}
+              {balanceVisible ? `$${balance.toLocaleString('es-UY')} ${card.currency}` : '••••••'}
             </div>
-            <div className="text-xs text-white/60 mt-1">Gastado este mes: ${spent.toLocaleString('es-UY')}</div>
+            <div className="text-xs text-white/60 mt-1">Gastado este mes: ${spent.toLocaleString('es-UY')} {card.currency}</div>
           </div>
         ) : (
           <div className="mt-3">

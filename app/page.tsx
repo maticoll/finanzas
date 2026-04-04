@@ -35,7 +35,7 @@ export default async function DashboardPage() {
       })
       const agg = await prisma.transaction.groupBy({
         by: ['type'],
-        where: { cardId: card.id, date: { gte: start, lte: end } },
+        where: { cardId: card.id, currency: card.currency, date: { gte: start, lte: end } },
         _sum: { amount: true },
       })
       const monthExpensesCard = agg.find(a => a.type === 'gasto')?._sum.amount ?? 0
