@@ -34,6 +34,7 @@ export async function POST(req: Request) {
   try {
     const parser = new PDFParse({ data: buffer })
     const result = await parser.getText()
+    await parser.destroy()
     pdfText = result.text?.trim() ?? ''
   } catch {
     return NextResponse.json({ error: 'No se pudo leer el PDF. Asegurate de subir un archivo PDF válido.' }, { status: 400 })
@@ -136,61 +137,66 @@ ${categoryList}
   let saved = 0
   let skipped = 0
 
-  for (const tx of transactions) {
-    // Validar campos básicos
-    if (!tx.date || !tx.amount || typeof tx.amount !== 'number' || tx.amount <= 0) {
-      skipped++
-      continue
-    }
+  try {
+    for (const tx of transactions) {
+      // Validar campos básicos
+      if (!tx.date || !tx.amount || typeof tx.amount !== 'number' || tx.amount <= 0) {
+        skipped++
+        continue
+      }
 
-    // Sanitizar currency
-    const currency = ['UYU', 'USD'].includes(tx.currency) ? tx.currency : 'UYU'
+      // Sanitizar currency
+      const currency = ['UYU', 'USD'].includes(tx.currency) ? tx.currency : 'UYU'
 
-    // Validar categoryId
-    const categoryId = validCategoryIds.has(tx.categoryId) ? tx.categoryId : otrosCategoryId
-    if (!categoryId) {
-      skipped++
-      continue
-    }
+      // Validar categoryId
+      const categoryId = validCategoryIds.has(tx.categoryId) ? tx.categoryId : otrosCategoryId
+      if (!categoryId) {
+        skipped++
+        continue
+      }
 
-    // Parsear fecha
-    const txDate = new Date(tx.date)
-    if (isNaN(txDate.getTime())) {
-      skipped++
-      continue
-    }
+      // Parsear fecha
+      const txDate = new Date(tx.date)
+      if (isNaN(txDate.getTime())) {
+        skipped++
+        continue
+      }
 
-    // Detectar duplicados
-    const duplicate = await prisma.transaction.findFirst({
-      where: {
-        cardId,
-        amount: tx.amount,
-        date: {
-          gte: new Date(txDate.getTime() - 86400000),
-          lte: new Date(txDate.getTime() + 86400000),
+      // Detectar duplicados
+      const duplicate = await prisma.transaction.findFirst({
+        where: {
+          cardId,
+          amount: tx.amount,
+          date: {
+            gte: new Date(txDate.getTime() - 86400000),
+            lte: new Date(txDate.getTime() + 86400000),
+          },
         },
-      },
-    })
+      })
 
-    if (duplicate) {
-      skipped++
-      continue
+      if (duplicate) {
+        skipped++
+        continue
+      }
+
+      // Insertar
+      await prisma.transaction.create({
+        data: {
+          amount: tx.amount,
+          currency,
+          type: 'gasto',
+          categoryId,
+          cardId,
+          description: tx.description ?? null,
+          source: 'extracto',
+          date: txDate,
+        },
+      })
+      saved++
     }
-
-    // Insertar
-    await prisma.transaction.create({
-      data: {
-        amount: tx.amount,
-        currency,
-        type: 'gasto',
-        categoryId,
-        cardId,
-        description: tx.description ?? null,
-        source: 'extracto',
-        date: txDate,
-      },
-    })
-    saved++
+  } catch (err) {
+    console.error('DB insert error:', err)
+    return NextResponse.json({ error: 'Error al guardar las transacciones. Intentá de nuevo.' }, { status: 500 })
   }
 
   return NextResponse.json({ saved, skipped })
