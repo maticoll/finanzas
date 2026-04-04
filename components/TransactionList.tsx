@@ -60,11 +60,14 @@ export default function TransactionList({ transactions, selectedCardId }: Props)
                   {t.description ?? t.category.name}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {t.category.name} · {t.card.name} · {dateStr}
+                  {t.category.name} · {t.card.name}
                 </div>
               </div>
-              <div className={`font-semibold text-sm ${isGasto ? 'text-red-400' : 'text-green-400'}`}>
-                {isGasto ? '-' : '+'}${t.amount.toLocaleString('es-UY')} {t.currency}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className={`font-semibold text-sm ${isGasto ? 'text-red-400' : 'text-green-400'}`}>
+                  {isGasto ? '-' : '+'}${t.amount.toLocaleString('es-UY')} {t.currency}
+                </div>
+                <div className="text-xs text-gray-400">{dateStr}</div>
               </div>
             </button>
           )
