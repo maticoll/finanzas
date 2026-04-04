@@ -15,6 +15,7 @@ type Props = {
   selectedCardId: string | null
   onSelect: (cardId: string | null) => void
   monthExpenses: Record<string, number>
+  debitBalances?: Record<string, number>
 }
 
 const CARD_COLORS: Record<string, string> = {
@@ -24,8 +25,9 @@ const CARD_COLORS: Record<string, string> = {
   'efectivo': 'from-green-600 to-green-900',
 }
 
-export default function CardCarousel({ cards, selectedCardId, onSelect, monthExpenses }: Props) {
+export default function CardCarousel({ cards, selectedCardId, onSelect, monthExpenses, debitBalances = {} }: Props) {
   const [current, setCurrent] = useState(0)
+  const [balanceVisible, setBalanceVisible] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const ownerCards = cards.filter(c => c.id !== 'itau-infinite' && !c.name.includes('mamá'))
@@ -48,6 +50,8 @@ export default function CardCarousel({ cards, selectedCardId, onSelect, monthExp
     const spent = monthExpenses[card.id] ?? 0
     const gradient = CARD_COLORS[card.id] ?? 'from-gray-600 to-gray-800'
     const isSelected = selectedCardId === card.id
+    const isDebito = card.type === 'debito'
+    const balance = debitBalances[card.id] ?? 0
     return (
       <div
         onClick={() => onSelect(isSelected ? null : card.id)}
@@ -57,10 +61,40 @@ export default function CardCarousel({ cards, selectedCardId, onSelect, monthExp
       >
         <div className="text-xs text-white/70 mb-1">{card.bank ?? card.type}</div>
         <div className="font-semibold text-white">{card.name}</div>
-        <div className="mt-3 text-white/80 text-sm">Gastado este mes</div>
-        <div className="text-xl font-bold text-white">${spent.toLocaleString('es-UY')} UYU</div>
-        {card.closingDay && (
-          <div className="text-xs text-white/60 mt-1">Cierre: día {card.closingDay}</div>
+
+        {isDebito ? (
+          <div className="mt-3">
+            <div className="flex items-center justify-between">
+              <div className="text-white/80 text-sm">Saldo actual</div>
+              <button
+                onClick={e => { e.stopPropagation(); setBalanceVisible(v => !v) }}
+                className="text-white/60 hover:text-white/90 transition-colors p-0.5"
+                aria-label={balanceVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
+              >
+                {balanceVisible ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/><line x1="2" y1="2" x2="22" y2="22"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+            <div className="text-xl font-bold text-white">
+              {balanceVisible ? `$${balance.toLocaleString('es-UY')} UYU` : '••••••'}
+            </div>
+            <div className="text-xs text-white/60 mt-1">Gastado este mes: ${spent.toLocaleString('es-UY')}</div>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <div className="text-white/80 text-sm">Gastado este mes</div>
+            <div className="text-xl font-bold text-white">${spent.toLocaleString('es-UY')} UYU</div>
+            {card.closingDay && (
+              <div className="text-xs text-white/60 mt-1">Cierre: día {card.closingDay}</div>
+            )}
+          </div>
         )}
       </div>
     )

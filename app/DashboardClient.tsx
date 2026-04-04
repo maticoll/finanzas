@@ -69,7 +69,17 @@ export default function DashboardClient({ cards, transactions, totalExpenses, to
         </div>
       </div>
       {/* Cards */}
-      <CardCarousel cards={cards} selectedCardId={selectedCardId} onSelect={setSelectedCardId} monthExpenses={monthExpenses} />
+      <CardCarousel
+        cards={cards}
+        selectedCardId={selectedCardId}
+        onSelect={setSelectedCardId}
+        monthExpenses={monthExpenses}
+        debitBalances={Object.fromEntries(
+          (balanceItems ?? [])
+            .filter((b: any) => b.card.type !== 'credito')
+            .map((b: any) => [b.card.id, b.expectedBalance])
+        )}
+      />
       {/* Transactions */}
       <div className="mt-6">
         <div className="px-4 mb-2 flex items-center justify-between">
