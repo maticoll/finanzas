@@ -103,12 +103,40 @@ Agregar el mismo ítem al sidebar desktop (sin restricción de espacio).
 
 ---
 
+## Formato del extracto Itaú
+
+El PDF del extracto Itaú tiene una tabla de transacciones con las siguientes columnas:
+```
+Fecha | Tarjeta | Detalle | Importe origen | Importe $ | Importe U$S
+```
+- **Fecha:** formato `DD MM YY` (ej: `02 03 26` = 2 de marzo de 2026)
+- **Importe $:** monto en pesos uruguayos, usa coma como separador decimal (ej: `3.675,00`)
+- **Importe U$S:** monto en dólares, usa coma como separador decimal (ej: `10,00`)
+- Si una fila tiene valor en "Importe $" → `currency: "UYU"`
+- Si una fila tiene valor en "Importe U$S" → `currency: "USD"`
+
+**Filas a EXCLUIR (no son gastos del usuario):**
+- `SALDO DEL ESTADO DE CUENTA ANTERIOR`
+- `PAGOS`
+- `SALDO CONTADO`
+- `INTERESES COMPENSATORIOS`
+- `INTERESES MORATORIOS`
+- `SEGURO DE VIDA SOBRE SALDO`
+- `UD. HA GENERADO X MILLAS`
+- `CUENTA ADHERIDA A...`
+
 ## Prompt a GPT
 
 ```
 Eres un asistente que extrae transacciones de extractos bancarios del banco Itaú Uruguay.
 
-Dado el siguiente texto de un extracto bancario, extrae TODAS las transacciones de gastos y devuelve un JSON array con este formato exacto:
+El extracto tiene una tabla con columnas: Fecha | Tarjeta | Detalle | Importe origen | Importe $ | Importe U$S
+
+Formato de fecha en el extracto: DD MM YY (ejemplo: "02 03 26" = 2 de marzo de 2026)
+Los montos usan coma como separador decimal (ejemplo: "3.675,00" = 3675.00)
+Si la fila tiene valor en "Importe $" la moneda es UYU; si tiene valor en "Importe U$S" la moneda es USD.
+
+Extrae SOLO las filas que representan gastos reales del usuario y devuelve un JSON array con este formato exacto:
 [
   {
     "date": "YYYY-MM-DD",
@@ -119,10 +147,17 @@ Dado el siguiente texto de un extracto bancario, extrae TODAS las transacciones 
   }
 ]
 
-Reglas:
-- Solo gastos (NO incluir: pagos de tarjeta, depósitos, saldos, resúmenes de cuenta, comisiones de administración que no sean gastos del usuario)
-- Moneda: "UYU" o "USD" según corresponda al monto en el extracto
-- amount: siempre un número positivo mayor a 0
+EXCLUIR completamente estas filas (no son gastos):
+- PAGOS (pagos realizados a la tarjeta)
+- SALDO DEL ESTADO DE CUENTA ANTERIOR
+- SALDO CONTADO
+- INTERESES COMPENSATORIOS
+- INTERESES MORATORIOS
+- SEGURO DE VIDA SOBRE SALDO
+- Cualquier fila de resumen, millas, o texto informativo
+
+Reglas adicionales:
+- amount: número positivo mayor a 0, sin comas (usar punto decimal)
 - categoryId: elegir el más apropiado de esta lista:
   <lista de categorías con formato "id: nombre">
 - Si no hay categoría clara, usar el categoryId de "Otros"
