@@ -73,11 +73,11 @@ export default function CardCarousel({ cards, selectedCardId, onSelect, monthExp
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex overflow-x-auto gap-3 px-4 pb-1 snap-x snap-mandatory scroll-smooth"
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+          className="flex overflow-x-auto gap-3 pl-4 pr-4 pb-1 snap-x snap-mandatory scroll-smooth scroll-pl-4"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
         >
           {ownerCards.map((card, i) => (
-            <div key={card.id} className="w-[85vw] flex-shrink-0 snap-center">
+            <div key={card.id} className="w-[85vw] flex-shrink-0 snap-start">
               <CardItem card={card} active={i === current} />
             </div>
           ))}
