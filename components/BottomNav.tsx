@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: '/transacciones/nueva', icon: '➕', label: 'Nueva' },
   { href: '/reportes', icon: '📊', label: 'Reportes' },
   { href: '/tarjetas', icon: '💳', label: 'Tarjetas' },
+  { href: '/extractos', icon: '📄', label: 'Extractos' },
 ]
 
 export default function BottomNav() {

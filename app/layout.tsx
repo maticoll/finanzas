@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/transacciones/nueva', icon: '➕', label: 'Nueva transacción' },
   { href: '/reportes', icon: '📊', label: 'Reportes' },
   { href: '/tarjetas', icon: '💳', label: 'Tarjetas' },
+  { href: '/extractos', icon: '📄', label: 'Extractos' },
 ]
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
