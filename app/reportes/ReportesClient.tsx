@@ -43,7 +43,7 @@ export default function ReportesClient({ initialMonth, initialYear }: { initialM
             </div>
           </div>
           {section('Gastos por categoría', <ExpensePieChart data={data.monthly.expenseByCategory} />)}
-          {section('Evolución del saldo', <BalanceLine data={data.monthly.dailyBalance} />)}
+          {section('Evolución del saldo', <BalanceLine data={data.monthly.dailyBalance} openingBalance={data.monthly.openingBalance} />)}
           {section('Top 5 categorías', <TopCategories data={data.monthly.topCategories} />)}
           {section('Por tarjeta', <CardSummary data={data.monthly.expenseByCard} />)}
           {section('Últimos 6 meses', <MonthlyBarChart data={data.last6} />)}

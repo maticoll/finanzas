@@ -10,11 +10,11 @@ export async function getMonthlyReport(month: number, year: number) {
   })
 
   // Gastos por categoría
-  const expenseByCategory: Record<string, { name: string; emoji: string | null; color: string | null; total: number }> = {}
+  const expenseByCategory: Record<string, { name: string; emoji: string | null; color: string | null; total: number; currency: string }> = {}
   // Ingresos por categoría
   const incomeByCategory: Record<string, { name: string; total: number }> = {}
   // Gastos por tarjeta
-  const expenseByCard: Record<string, { name: string; total: number }> = {}
+  const expenseByCard: Record<string, { name: string; total: number; currency: string }> = {}
   // Total gastos e ingresos
   let totalExpenses = 0
   let totalIncome = 0
@@ -26,13 +26,15 @@ export async function getMonthlyReport(month: number, year: number) {
     if (t.type === 'gasto') {
       totalExpenses += t.amount
       const catId = t.categoryId
-      if (!expenseByCategory[catId]) {
-        expenseByCategory[catId] = { name: t.category.name, emoji: t.category.emoji, color: t.category.color, total: 0 }
+      const catKey = `${catId}_${t.currency}`
+      if (!expenseByCategory[catKey]) {
+        expenseByCategory[catKey] = { name: t.category.name, emoji: t.category.emoji, color: t.category.color, total: 0, currency: t.currency }
       }
-      expenseByCategory[catId].total += t.amount
+      expenseByCategory[catKey].total += t.amount
       const cardId = t.cardId
-      if (!expenseByCard[cardId]) expenseByCard[cardId] = { name: t.card.name, total: 0 }
-      expenseByCard[cardId].total += t.amount
+      const cardKey = `${cardId}_${t.currency}`
+      if (!expenseByCard[cardKey]) expenseByCard[cardKey] = { name: t.card.name, total: 0, currency: t.currency }
+      expenseByCard[cardKey].total += t.amount
       dailyBalance[dayKey] = (dailyBalance[dayKey] ?? 0) - t.amount
     } else {
       totalIncome += t.amount
@@ -48,6 +50,17 @@ export async function getMonthlyReport(month: number, year: number) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 5)
 
+  // Opening balance: suma de saldos de apertura del mes anterior para tarjetas de débito UYU
+  const prevMonth = month === 1 ? 12 : month - 1
+  const prevYear = month === 1 ? year - 1 : year
+  const prevBalances = await prisma.monthlyBalance.findMany({
+    where: { month: prevMonth, year: prevYear },
+    include: { card: true },
+  })
+  const openingBalance = prevBalances
+    .filter(b => b.card.type !== 'credito' && b.card.currency === 'UYU')
+    .reduce((sum, b) => sum + b.openingBalance, 0)
+
   return {
     totalExpenses,
     totalIncome,
@@ -56,6 +69,7 @@ export async function getMonthlyReport(month: number, year: number) {
     expenseByCard: Object.values(expenseByCard),
     topCategories,
     dailyBalance,
+    openingBalance,
   }
 }
 

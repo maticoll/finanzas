@@ -1,15 +1,15 @@
 'use client'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
-type Props = { data: Record<string, number> }
+type Props = { data: Record<string, number>; openingBalance?: number }
 
-export default function BalanceLine({ data }: Props) {
+export default function BalanceLine({ data, openingBalance = 0 }: Props) {
   const chartData = Object.entries(data)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, delta]) => ({ date: date.slice(5), delta }))
 
-  // Acumular
-  let running = 0
+  // Acumular desde el saldo de apertura
+  let running = openingBalance
   const accumulated = chartData.map(d => { running += d.delta; return { date: d.date, balance: running } })
 
   return (
