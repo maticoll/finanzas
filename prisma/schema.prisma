@@ -67,6 +67,7 @@ enum TransactionType {
 enum Source {
   manual
   telegram
+  extracto
 }
 
 model MonthlyBalance {
