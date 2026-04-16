@@ -1,9 +1,13 @@
 import { prisma } from '@/lib/db'
+import { auth } from '@/auth'
 import DashboardClient from './DashboardClient'
 
 export const revalidate = 0
 
 export default async function DashboardPage() {
+  const session = await auth()
+  const userId = session!.user.id
+
   const now = new Date()
   const month = now.getMonth() + 1
   const year = now.getFullYear()
@@ -14,16 +18,15 @@ export default async function DashboardPage() {
   const prevYear = month === 1 ? year - 1 : year
 
   const [cards, transactions] = await Promise.all([
-    prisma.card.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } }),
+    prisma.card.findMany({ where: { isActive: true, userId }, orderBy: { createdAt: 'asc' } }),
     prisma.transaction.findMany({
-      where: { date: { gte: start, lte: end } },
+      where: { date: { gte: start, lte: end }, card: { userId } },
       include: { category: true, card: true },
       orderBy: { date: 'desc' },
       take: 50,
     }),
   ])
 
-  // Calcular balances directamente con Prisma (sin fetch a sí mismo)
   const debitCards = cards.filter(c => c.isOwner && c.type !== 'credito')
   const balances = await Promise.all(
     debitCards.map(async (card) => {

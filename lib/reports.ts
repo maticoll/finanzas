@@ -1,11 +1,11 @@
 import { prisma } from './db'
 
-export async function getMonthlyReport(month: number, year: number) {
+export async function getMonthlyReport(month: number, year: number, userId: string) {
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0, 23, 59, 59)
 
   const transactions = await prisma.transaction.findMany({
-    where: { date: { gte: start, lte: end } },
+    where: { date: { gte: start, lte: end }, card: { userId } },
     include: { category: true, card: true },
   })
 
@@ -50,11 +50,11 @@ export async function getMonthlyReport(month: number, year: number) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 5)
 
-  // Opening balance: suma de saldos de apertura del mes anterior para tarjetas de débito UYU
+  // Opening balance: suma de saldos de apertura del mes anterior para tarjetas de débito UYU del usuario
   const prevMonth = month === 1 ? 12 : month - 1
   const prevYear = month === 1 ? year - 1 : year
   const prevBalances = await prisma.monthlyBalance.findMany({
-    where: { month: prevMonth, year: prevYear },
+    where: { month: prevMonth, year: prevYear, card: { userId } },
     include: { card: true },
   })
   const openingBalance = prevBalances
@@ -73,7 +73,7 @@ export async function getMonthlyReport(month: number, year: number) {
   }
 }
 
-export async function getLast6MonthsSummary() {
+export async function getLast6MonthsSummary(userId: string) {
   const results = []
   const now = new Date()
   for (let i = 5; i >= 0; i--) {
@@ -84,7 +84,7 @@ export async function getLast6MonthsSummary() {
     const end = new Date(year, month, 0, 23, 59, 59)
     const agg = await prisma.transaction.groupBy({
       by: ['type'],
-      where: { date: { gte: start, lte: end } },
+      where: { date: { gte: start, lte: end }, card: { userId } },
       _sum: { amount: true },
     })
     const expenses = agg.find(a => a.type === 'gasto')?._sum.amount ?? 0

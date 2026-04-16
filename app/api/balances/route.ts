@@ -1,15 +1,19 @@
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { auth } from '@/auth'
 
 export async function GET(req: Request) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { searchParams } = new URL(req.url)
   const month = parseInt(searchParams.get('month') ?? String(new Date().getMonth() + 1))
   const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()))
 
-  // Solo tarjetas propias que no son crédito
+  // Solo tarjetas propias que no son crédito, del usuario actual
   const cards = await prisma.card.findMany({
-    where: { isOwner: true, isActive: true, type: { not: 'credito' } },
+    where: { userId: session.user.id, isOwner: true, isActive: true, type: { not: 'credito' } },
   })
 
   const balances = await Promise.all(
@@ -18,7 +22,6 @@ export async function GET(req: Request) {
         where: { cardId_month_year: { cardId: card.id, month, year } },
       })
 
-      // Calcular saldo esperado
       const prevMonth = month === 1 ? 12 : month - 1
       const prevYear = month === 1 ? year - 1 : year
       const prevBalance = await prisma.monthlyBalance.findUnique({
@@ -45,8 +48,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const body = await req.json()
-  // body: { cardId, month, year, openingBalance, status }
   const { cardId, month, year, openingBalance, status } = body
   const expectedBalance = body.expectedBalance ?? 0
   const difference = openingBalance - expectedBalance

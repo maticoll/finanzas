@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import BottomNav from '@/components/BottomNav'
 import Link from 'next/link'
+import { auth, signOut } from '@/auth'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,9 +24,24 @@ const NAV_ITEMS = [
   { href: '/reportes', icon: '📊', label: 'Reportes' },
   { href: '/tarjetas', icon: '💳', label: 'Tarjetas' },
   { href: '/extractos', icon: '📄', label: 'Extractos' },
+  { href: '/categorias', icon: '🏷️', label: 'Categorías' },
 ]
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// IMPORTANT: must remain a Server Component — do NOT add 'use client'
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth()
+
+  // Sin sesión: renderizar limpio (login/signup)
+  if (!session) {
+    return (
+      <html lang="es">
+        <body className={`${inter.className} bg-gray-950 text-gray-100`}>
+          {children}
+        </body>
+      </html>
+    )
+  }
+
   return (
     <html lang="es">
       <body className={`${inter.className} bg-gray-950 text-gray-100 h-screen overflow-hidden flex flex-col`}>
@@ -43,8 +59,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span>{item.label}</span>
               </Link>
             ))}
+            {/* Usuario + logout */}
+            <div className="mt-auto pt-4 border-t border-gray-800">
+              <div className="px-2 text-xs text-gray-500 mb-2 truncate">{session.user.name}</div>
+              <form
+                action={async () => {
+                  'use server'
+                  await signOut({ redirectTo: '/login' })
+                }}
+              >
+                <button
+                  type="submit"
+                  className="w-full text-left px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-sm"
+                >
+                  Cerrar sesión
+                </button>
+              </form>
+            </div>
           </aside>
-          {/* Main content scrolls here */}
+          {/* Main content */}
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>

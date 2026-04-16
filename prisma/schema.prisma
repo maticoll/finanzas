@@ -7,8 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  cards        Card[]
+  categories   Category[]
+}
+
 model Card {
   id                  String    @id @default(cuid())
+  userId              String?
+  user                User?     @relation(fields: [userId], references: [id])
   name                String
   type                CardType
   bank                String?
@@ -35,6 +47,8 @@ enum CardType {
 
 model Category {
   id           String          @id @default(cuid())
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id])
   name         String
   type         TransactionType
   emoji        String?
