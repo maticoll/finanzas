@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 import DashboardClient from './DashboardClient'
 
 export const revalidate = 0
@@ -7,6 +8,10 @@ export const revalidate = 0
 export default async function DashboardPage() {
   const session = await auth()
   const userId = session!.user.id
+
+  // Usuario nuevo sin tarjetas → onboarding
+  const cardCount = await prisma.card.count({ where: { userId } })
+  if (cardCount === 0) redirect('/onboarding')
 
   const now = new Date()
   const month = now.getMonth() + 1

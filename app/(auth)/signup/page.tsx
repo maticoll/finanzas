@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function SignupPage() {
@@ -9,7 +9,6 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,12 +21,25 @@ export default function SignupPage() {
       body: JSON.stringify({ name, email, password }),
     })
 
-    setLoading(false)
     if (!res.ok) {
       const data = await res.json()
       setError(data.error ?? 'Error al registrarse')
+      setLoading(false)
+      return
+    }
+
+    // Auto-login y redirigir al onboarding
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
+
+    setLoading(false)
+    if (result?.error) {
+      setError('Cuenta creada pero no se pudo iniciar sesión. Iniciá sesión manualmente.')
     } else {
-      router.push('/login')
+      window.location.href = '/onboarding'
     }
   }
 
