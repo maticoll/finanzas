@@ -35,6 +35,10 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
+  // Verify the card belongs to the current user before creating the transaction
+  const card = await prisma.card.findFirst({ where: { id: body.cardId, userId: session.user.id } })
+  if (!card) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const transaction = await prisma.transaction.create({
     data: { ...body, date: new Date(body.date) },
     include: { category: true, card: true },

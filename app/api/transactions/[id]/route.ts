@@ -10,7 +10,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const body = await req.json()
   const transaction = await prisma.transaction.update({
-    where: { id },
+    where: { id, card: { userId: session.user.id } },
     data: { ...body, ...(body.date ? { date: new Date(body.date) } : {}) },
     include: { category: true, card: true },
   })
@@ -22,6 +22,6 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  await prisma.transaction.delete({ where: { id } })
+  await prisma.transaction.delete({ where: { id, card: { userId: session.user.id } } })
   return new NextResponse(null, { status: 204 })
 }

@@ -56,6 +56,10 @@ export async function POST(req: Request) {
   const expectedBalance = body.expectedBalance ?? 0
   const difference = openingBalance - expectedBalance
 
+  // Verify the card belongs to the current user
+  const card = await prisma.card.findFirst({ where: { id: cardId, userId: session.user.id } })
+  if (!card) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const balance = await prisma.monthlyBalance.upsert({
     where: { cardId_month_year: { cardId, month, year } },
     update: { openingBalance, expectedBalance, difference, status },
