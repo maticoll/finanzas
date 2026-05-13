@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/tarjetas', icon: '💳', label: 'Tarjetas' },
   { href: '/extractos', icon: '📄', label: 'Extractos' },
   { href: '/categorias', icon: '🏷️', label: 'Categorías' },
+  { href: '/settings', icon: '🔑', label: 'API Keys' },
 ]
 
 // IMPORTANT: must remain a Server Component — do NOT add 'use client'
