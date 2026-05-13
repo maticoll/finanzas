@@ -98,8 +98,8 @@ export default function ApiKeysClient({ initialKeys }: { initialKeys: ApiKey[] }
         {keys.map(k => (
           <div key={k.id} className="bg-gray-900 rounded-xl p-3 border border-gray-800 flex items-center justify-between">
             <div>
-              <p className="font-medium text-sm">{k.name}</p>
-              <p className="text-xs text-gray-500">{new Date(k.createdAt).toLocaleDateString('es')}</p>
+              <p className="font-medium text-sm text-white">{k.name}</p>
+              <p className="text-xs text-gray-400">{new Date(k.createdAt).toLocaleDateString('es')}</p>
             </div>
             <button
               onClick={() => remove(k.id)}
