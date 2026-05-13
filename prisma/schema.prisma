@@ -15,6 +15,16 @@ model User {
   createdAt    DateTime   @default(now())
   cards        Card[]
   categories   Category[]
+  apiKeys      ApiKey[]
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  key       String   @unique
+  createdAt DateTime @default(now())
 }
 
 model Card {

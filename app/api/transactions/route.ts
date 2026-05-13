@@ -1,11 +1,15 @@
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { resolveUserId, corsHeaders } from '@/lib/api-auth'
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(req.headers.get('origin')) })
+}
 
 export async function GET(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await resolveUserId(req)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const cardId = searchParams.get('cardId')
@@ -13,7 +17,7 @@ export async function GET(req: Request) {
   const year = searchParams.get('year')
   const limit = parseInt(searchParams.get('limit') ?? '50')
 
-  const where: any = { card: { userId: session.user.id } }
+  const where: any = { card: { userId } }
   if (cardId) where.cardId = cardId
   if (month && year) {
     const start = new Date(parseInt(year), parseInt(month) - 1, 1)
@@ -27,21 +31,20 @@ export async function GET(req: Request) {
     orderBy: { date: 'desc' },
     take: limit,
   })
-  return NextResponse.json(transactions)
+  return NextResponse.json(transactions, { headers: corsHeaders(req.headers.get('origin')) })
 }
 
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await resolveUserId(req)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  // Verify the card belongs to the current user before creating the transaction
-  const card = await prisma.card.findFirst({ where: { id: body.cardId, userId: session.user.id } })
+  const card = await prisma.card.findFirst({ where: { id: body.cardId, userId } })
   if (!card) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const transaction = await prisma.transaction.create({
     data: { ...body, date: new Date(body.date) },
     include: { category: true, card: true },
   })
-  return NextResponse.json(transaction, { status: 201 })
+  return NextResponse.json(transaction, { status: 201, headers: corsHeaders(req.headers.get('origin')) })
 }

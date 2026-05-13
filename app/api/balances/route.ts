@@ -1,19 +1,22 @@
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { resolveUserId, corsHeaders } from '@/lib/api-auth'
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(req.headers.get('origin')) })
+}
 
 export async function GET(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await resolveUserId(req)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const month = parseInt(searchParams.get('month') ?? String(new Date().getMonth() + 1))
   const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()))
 
-  // Solo tarjetas propias que no son crédito, del usuario actual
   const cards = await prisma.card.findMany({
-    where: { userId: session.user.id, isOwner: true, isActive: true, type: { not: 'credito' } },
+    where: { userId, isOwner: true, isActive: true, type: { not: 'credito' } },
   })
 
   const balances = await Promise.all(
@@ -44,20 +47,19 @@ export async function GET(req: Request) {
     })
   )
 
-  return NextResponse.json(balances)
+  return NextResponse.json(balances, { headers: corsHeaders(req.headers.get('origin')) })
 }
 
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await resolveUserId(req)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const { cardId, month, year, openingBalance, status } = body
   const expectedBalance = body.expectedBalance ?? 0
   const difference = openingBalance - expectedBalance
 
-  // Verify the card belongs to the current user
-  const card = await prisma.card.findFirst({ where: { id: cardId, userId: session.user.id } })
+  const card = await prisma.card.findFirst({ where: { id: cardId, userId } })
   if (!card) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const balance = await prisma.monthlyBalance.upsert({
@@ -65,5 +67,5 @@ export async function POST(req: Request) {
     update: { openingBalance, expectedBalance, difference, status },
     create: { cardId, month, year, openingBalance, expectedBalance, difference, status },
   })
-  return NextResponse.json(balance, { status: 201 })
+  return NextResponse.json(balance, { status: 201, headers: corsHeaders(req.headers.get('origin')) })
 }
